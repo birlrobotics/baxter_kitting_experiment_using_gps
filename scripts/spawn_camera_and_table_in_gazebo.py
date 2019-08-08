@@ -5,6 +5,9 @@ import os
 import subprocess
 import rospy
 from gazebo_msgs.srv import DeleteModel, DeleteModelRequest
+from tf.transformations import euler_matrix, euler_from_matrix
+import numpy as np
+import math
 
 def setup_experiment_table():
     model_name = 'experiment_table'
@@ -22,12 +25,23 @@ def setup_camera():
 
     camera_sdf = os.path.join(CONSTANT.gazebo_model_dir, 'camera.sdf')
     delete_model_service.call(DeleteModelRequest(model_name=model_name))
-    subprocess.call("rosrun gazebo_ros spawn_model -sdf -file %s -model %s -reference_frame baxter::base -x 0.2 -y 0 -z 0.2 -P 0.65"%(camera_sdf, model_name,), shell=True)
+
+    x, y, z = [0.3, 0, 0.2]
+    roll, pitch, yaw = [0, 0.65, 0]
+
+    subprocess.call("rosrun gazebo_ros spawn_model -sdf -file %s -model %s -reference_frame baxter::base -x %s -y %s -z %s -R %s -P %s -Y %s"%(camera_sdf, model_name, x, y, z, roll, pitch, yaw,), shell=True)
+
+
+    rviz_frame_correction_rpy = [-math.pi/2, 0, -math.pi/2]
+
+    tf_roll, tf_pitch, tf_yaw = euler_from_matrix(np.dot(euler_matrix(roll, pitch, yaw), euler_matrix(*rviz_frame_correction_rpy)))
+
+    subprocess.Popen('rosrun tf static_transform_publisher %s %s %s %s %s %s /base /baxter_kitting_expertiment_camera_frame 1000'%(x, y, z, tf_yaw, tf_pitch, tf_roll,), shell=True)
+
 
 if __name__ == '__main__':
     rospy.init_node('spawn_camera_and_table_in_gazebo_node')
     setup_experiment_table()
     setup_camera()
 
-
-
+    rospy.spin()

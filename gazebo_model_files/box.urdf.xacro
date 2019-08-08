@@ -3,7 +3,7 @@
   <xacro:property name="box_size" value="0.03" />
   <xacro:property name="box_mass" value="0.05" />
   <pose>0 0 ${box_size/2} 0 0 0</pose>
-  <link name="experiemnt_box_link">
+  <link name="experiment_box_link">
     <gravity>true</gravity>
     <inertial>
       <origin xyz="0 0 0" />
@@ -36,7 +36,7 @@
       </geometry>
     </visual>
   </link>
-  <gazebo reference="experiemnt_box_link">
+  <gazebo reference="experiment_box_link">
     <material>Gazebo/Blue</material>
   </gazebo>  
 </robot>

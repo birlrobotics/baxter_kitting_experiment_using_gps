@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
   <model name="camera">
+    <static>true</static>
     <link name="baxter_kitting_expertiment_camera">
-      <gravity>False</gravity>
       <inertial>
         <mass>0.1</mass>
         <inertia>

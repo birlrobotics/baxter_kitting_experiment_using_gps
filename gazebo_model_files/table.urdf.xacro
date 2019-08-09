@@ -14,8 +14,8 @@
        xmlns:physics="http://playerstage.sourceforge.net/gazebo/xmlschema/#physics">
 
   <property name="table_height" value="0.55" />
-  <property name="table_width" value="1.0" />
-  <property name="table_depth" value="1.0" />
+  <property name="table_width" value="1.5" />
+  <property name="table_depth" value="1.5" />
   <property name="leg_radius" value="0.02" />
   <property name="table_x" value="0.98" />
   <property name="table_y" value="0.0" />

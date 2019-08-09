@@ -9,8 +9,11 @@ from tf.transformations import euler_matrix, euler_from_matrix
 import numpy as np
 import math
 import signal
+from gazebo_msgs.srv import GetLinkState, GetLinkStateRequest
+import tf
 
 delete_model_service = None
+gazebo_links_to_pubish_to_tf = []
 
 def setup_experiment_table():
     model_name = 'experiment_table'
@@ -42,6 +45,8 @@ def setup_camera():
     return tf_pub_process
 
 def setup_object():
+    global gazebo_links_to_pubish_to_tf
+
     model_name = 'experiment_box'
     delete_model_service.call(DeleteModelRequest(model_name=model_name))
 
@@ -50,6 +55,8 @@ def setup_object():
     rospy.set_param("box_urdf", box_urdf)
     subprocess.call("rosrun gazebo_ros spawn_model -urdf -param box_urdf -model %s -reference_frame baxter::base -x 0.85 -y 0 -z 1"%(model_name,), shell=True)
 
+    gazebo_links_to_pubish_to_tf.append('experiment_box::experiment_box_link')
+
 if __name__ == '__main__':
     rospy.init_node('spawn_camera_and_table_in_gazebo_node')
     delete_model_service = rospy.ServiceProxy('/gazebo/delete_model', DeleteModel)
@@ -57,7 +64,31 @@ if __name__ == '__main__':
     tf_pub_process = setup_camera()
     setup_object()
 
-    rospy.spin()
+    tf_broadcaster = tf.TransformBroadcaster()
+    get_gazebo_link_service = rospy.ServiceProxy('/gazebo/get_link_state', GetLinkState)
+
+    r = rospy.Rate(100)
+    while not rospy.is_shutdown():
+        for i in gazebo_links_to_pubish_to_tf: 
+            req = GetLinkStateRequest(
+                link_name=i,
+                reference_frame='base'
+            )
+        
+    
+            resp = get_gazebo_link_service.call(req)
+
+            pos = resp.link_state.pose.position
+            ori = resp.link_state.pose.orientation
+            tf_broadcaster.sendTransform(
+                translation=(pos.x, pos.y, pos.z),
+                rotation=(ori.x, ori.y, ori.z, ori.w),
+                time=rospy.Time.now(),
+                child=i,
+                parent='base',
+            )
+
+        r.sleep()
 
     os.kill(tf_pub_process.pid, signal.SIGINT)
     os.kill(tf_pub_process.pid, signal.SIGTERM)

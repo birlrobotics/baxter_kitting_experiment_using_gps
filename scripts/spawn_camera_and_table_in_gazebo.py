@@ -14,8 +14,10 @@ import tf
 
 delete_model_service = None
 gazebo_links_to_pubish_to_tf = []
+gazebo_links_tf_name = []
 
 def setup_experiment_table():
+    global gazebo_links_to_pubish_to_tf
     model_name = 'experiment_table'
     delete_model_service.call(DeleteModelRequest(model_name=model_name))
 
@@ -23,6 +25,8 @@ def setup_experiment_table():
     table_urdf = subprocess.check_output("rosrun xacro xacro %s"%table_urdf_xacro, shell=True)
     rospy.set_param("table_urdf", table_urdf)
     subprocess.call("rosrun gazebo_ros spawn_model -urdf -param table_urdf -model %s -reference_frame baxter::base -x 0 -y 0 -z -0.7"%(model_name,), shell=True)
+    gazebo_links_to_pubish_to_tf.append('experiment_table::table_top_link')
+    gazebo_links_tf_name.append('table_top_link')
 
 def setup_camera():
     model_name = 'experiment_camera'
@@ -56,6 +60,7 @@ def setup_object():
     subprocess.call("rosrun gazebo_ros spawn_model -urdf -param box_urdf -model %s -reference_frame baxter::base -x 0.85 -y 0 -z 1"%(model_name,), shell=True)
 
     gazebo_links_to_pubish_to_tf.append('experiment_box::experiment_box_link')
+    gazebo_links_tf_name.append('experiment_box_link')
 
 if __name__ == '__main__':
     rospy.init_node('spawn_camera_and_table_in_gazebo_node')
@@ -69,9 +74,9 @@ if __name__ == '__main__':
 
     r = rospy.Rate(100)
     while not rospy.is_shutdown():
-        for i in gazebo_links_to_pubish_to_tf: 
+        for count, gazebo_link in enumerate(gazebo_links_to_pubish_to_tf): 
             req = GetLinkStateRequest(
-                link_name=i,
+                link_name=gazebo_link,
                 reference_frame='base'
             )
         
@@ -84,7 +89,7 @@ if __name__ == '__main__':
                 translation=(pos.x, pos.y, pos.z),
                 rotation=(ori.x, ori.y, ori.z, ori.w),
                 time=rospy.Time.now(),
-                child=i,
+                child=gazebo_links_tf_name[count],
                 parent='base',
             )
 

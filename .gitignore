@@ -108,3 +108,7 @@ venv.bak/
 
 doc/html/
 
+
+baxter_badmm_example/policy_iter_*
+baxter_badmm_example/log.txt
+baxter_badmm_example/data_files*

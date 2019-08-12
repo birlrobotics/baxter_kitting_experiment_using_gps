@@ -19,7 +19,6 @@ from gps.algorithm.policy_opt.policy_opt_caffe import PolicyOptCaffe
 from gps.algorithm.traj_opt.traj_opt_lqr_python import TrajOptLQRPython
 from gps.algorithm.policy.lin_gauss_init import init_lqr
 from gps.algorithm.policy.policy_prior_gmm import PolicyPriorGMM
-from gps.gui.target_setup_gui import load_pose_from_npz
 from gps.proto.gps_pb2 import JOINT_ANGLES, JOINT_VELOCITIES, \
         END_EFFECTOR_POINTS, END_EFFECTOR_POINT_VELOCITIES, ACTION, \
         TRIAL_ARM, AUXILIARY_ARM, JOINT_SPACE
@@ -48,7 +47,6 @@ common = {
             datetime.strftime(datetime.now(), '%m-%d-%y_%H-%M'),
     'experiment_dir': EXP_DIR,
     'data_files_dir': os.path.join(EXP_DIR, 'data_files/'),
-    'target_filename': os.path.join(EXP_DIR, 'target.npz'),
     'log_filename': os.path.join(EXP_DIR, 'log.txt'),
     'conditions': 2,
 }
@@ -56,28 +54,18 @@ common = {
 x0s = []
 ee_tgts = []
 reset_conditions = []
+ee_pos_tgts = []
 
 # Set up each condition.
 for i in range(common['conditions']):
-    ja_x0, ee_pos_x0, ee_rot_x0 = load_pose_from_npz(
-        common['target_filename'], 'trial_arm', str(i), 'initial'
-    )
     ja_x0 = [0.7672968905628448, -0.44148370735571607, 0.002002266876363734, 0.7476533775853085, 0.0041948141609911005, 1.254699270858885, -0.0028972254115142704]
 
     ee_pos_x0 = np.array([[0.8496260063310132, -0.27029780966027417, -0.016246145055006794]])
-
     ee_rot_x0 = np.array([[-0.9998277972567736, 0.015613921575623742, 0.010029022170598383], [0.015670869143830205, 0.999861381940975, 0.005625012298718447], [-0.009939803466117067, 0.005781207150245945, -0.9999338867899922]])
 
-    ja_aux, _, _ = load_pose_from_npz(
-        common['target_filename'], 'auxiliary_arm', str(i), 'initial'
-    )
     ja_aux = [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0]
 
-    _, ee_pos_tgt, ee_rot_tgt = load_pose_from_npz(
-        common['target_filename'], 'trial_arm', str(i), 'target'
-    )
-
-    ee_pos_tgt += [-0.05, 0, 0.2]
+    ee_pos_tgt = np.array([[0.9096260063310132, -0.07029780966027417+i*0.2, -0.016246145055006794]])
     ee_rot_tgt = np.array([[-0.9183327592979894, 0.27621409730918317, 0.2834972938985746], [0.297429466960146, 0.9541441924491688, 0.03383152670700853], [-0.26115255193841225, 0.11538904828100763, -0.9583760807495452]])
 
     x0 = np.zeros(32)
@@ -107,6 +95,7 @@ for i in range(common['conditions']):
     x0s.append(x0)
     ee_tgts.append(ee_tgt)
     reset_conditions.append(reset_condition)
+    ee_pos_tgts.append(ee_pos_tgt)
 
 if not os.path.exists(common['data_files_dir']):
     os.makedirs(common['data_files_dir'])
@@ -130,7 +119,7 @@ agent = {
 algorithm = {
     'type': AlgorithmBADMM,
     'conditions': common['conditions'],
-    'iterations': 10,
+    'iterations': 20,
     'lg_step_schedule': np.array([1e-4, 1e-3, 1e-2, 1e-1]),
     'policy_dual_rate': 0.1,
     'ent_reg_schedule': np.array([1e-3, 1e-3, 1e-2, 1e-1]),
@@ -234,7 +223,6 @@ config = {
     'num_samples': 5,
     'use_gpu':True,
     'gpu_id': 0,
-    'random_seed': random.seed(datetime.now()),
 }
 
 common['info'] = generate_experiment_info(config)

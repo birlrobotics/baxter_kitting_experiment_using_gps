@@ -44,7 +44,7 @@ def setup_camera():
 
     tf_roll, tf_pitch, tf_yaw = euler_from_matrix(np.dot(euler_matrix(roll, pitch, yaw), euler_matrix(*rviz_frame_correction_rpy)))
 
-    tf_pub_process = subprocess.Popen('rosrun tf static_transform_publisher %s %s %s %s %s %s /base /baxter_kitting_expertiment_camera_frame 1000'%(x, y, z, tf_yaw, tf_pitch, tf_roll,), shell=True)
+    tf_pub_process = subprocess.Popen('rosrun tf static_transform_publisher %s %s %s %s %s %s /base /gps_rgb_camera_frame 1000'%(x, y, z, tf_yaw, tf_pitch, tf_roll,), shell=True)
 
     return tf_pub_process
 

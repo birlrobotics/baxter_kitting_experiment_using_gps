@@ -15,16 +15,20 @@ from gps.algorithm.cost.cost_sum import CostSum
 from gps.algorithm.cost.cost_utils import RAMP_LINEAR, RAMP_FINAL_ONLY
 from gps.algorithm.dynamics.dynamics_lr_prior import DynamicsLRPrior
 from gps.algorithm.dynamics.dynamics_prior_gmm import DynamicsPriorGMM
-from gps.algorithm.policy_opt.policy_opt_caffe import PolicyOptCaffe
+from gps.algorithm.policy_opt.outsource_policy_opt_to_ros import OutsourcePolicyOptToROS
 from gps.algorithm.traj_opt.traj_opt_lqr_python import TrajOptLQRPython
 from gps.algorithm.policy.lin_gauss_init import init_lqr
 from gps.algorithm.policy.policy_prior_gmm import PolicyPriorGMM
 from gps.proto.gps_pb2 import JOINT_ANGLES, JOINT_VELOCITIES, \
         END_EFFECTOR_POINTS, END_EFFECTOR_POINT_VELOCITIES, ACTION, \
-        TRIAL_ARM, AUXILIARY_ARM, JOINT_SPACE
+        TRIAL_ARM, AUXILIARY_ARM, JOINT_SPACE, RGB_IMAGE
 from gps.utility.general_utils import get_ee_points
 from gps.gui.config import generate_experiment_info
 import os
+
+IMAGE_WIDTH = 240
+IMAGE_HEIGHT = 240
+IMAGE_CHANNELS = 3
 
 
 EE_POINTS = np.array([[0.02, -0.025, 0.05], [0.02, -0.025, -0.05],
@@ -36,6 +40,7 @@ SENSOR_DIMS = {
     END_EFFECTOR_POINTS: 3 * EE_POINTS.shape[0],
     END_EFFECTOR_POINT_VELOCITIES: 3 * EE_POINTS.shape[0],
     ACTION: 7,
+    RGB_IMAGE: IMAGE_WIDTH*IMAGE_HEIGHT*IMAGE_CHANNELS,
 }
 
 PR2_GAINS = np.array([3.09, 1.08, 0.393, 0.674, 0.111, 0.152, 0.098])
@@ -65,7 +70,7 @@ for i in range(common['conditions']):
 
     ja_aux = [0.0, -0.55, 0.0, 0.75, 0.0, 1.26, 0.0]
 
-    ee_pos_tgt = np.array([[0.9096260063310132, -0.07029780966027417+i*0.2, -0.016246145055006794]])
+    ee_pos_tgt = np.array([[0.8596260063310132, -0.12029780966027417+i*0.2, -0.116246145055006794]])
     ee_rot_tgt = np.array([[-0.9183327592979894, 0.27621409730918317, 0.2834972938985746], [0.297429466960146, 0.9541441924491688, 0.03383152670700853], [-0.26115255193841225, 0.11538904828100763, -0.9583760807495452]])
 
     x0 = np.zeros(32)
@@ -113,7 +118,7 @@ agent = {
                       END_EFFECTOR_POINT_VELOCITIES],
     'end_effector_points': EE_POINTS,
     'obs_include': [JOINT_ANGLES, JOINT_VELOCITIES, END_EFFECTOR_POINTS,
-                    END_EFFECTOR_POINT_VELOCITIES],
+                    END_EFFECTOR_POINT_VELOCITIES, RGB_IMAGE],
 }
 
 algorithm = {
@@ -198,7 +203,7 @@ algorithm['traj_opt'] = {
 }
 
 algorithm['policy_opt'] = {
-    'type': PolicyOptCaffe,
+    'type': OutsourcePolicyOptToROS,
     'weights_file_prefix': os.path.join(EXP_DIR, 'policy'),
     'iterations': 3000,
 }
@@ -218,7 +223,7 @@ config = {
     'verbose_trials': 0,
     'verbose_policy_trials': 1,
     'agent': agent,
-    'gui_on': True,
+    'gui_on': False,
     'algorithm': algorithm,
     'num_samples': 5,
     'use_gpu':True,

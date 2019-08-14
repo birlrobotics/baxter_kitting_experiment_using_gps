@@ -57,7 +57,7 @@ Visualization Manager:
       Marker Topic: visualization_marker_array
       Name: MarkerArray
       Namespaces:
-        plot_sample_result: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 0.300000012
@@ -369,11 +369,11 @@ Visualization Manager:
     - Class: rviz/Camera
       Enabled: true
       Image Rendering: background and overlay
-      Image Topic: /baxter_kitting_expertiment_camera/image_raw
+      Image Topic: /gps_rgb_camera/image_raw
       Name: Camera
       Overlay Alpha: 0.5
       Queue Size: 2
-      Transport Hint: raw
+      Transport Hint: compressed
       Unreliable: false
       Value: true
       Visibility:
